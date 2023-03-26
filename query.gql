@@ -1,12 +1,12 @@
 delete{
-  B(not: [id: {lt: 2}]){
-    ti,
-    au,
-    Turtle(or:[and:[age:{eq:"stari4ok"},age:{eq:101}], name:{eq:True}]){
+  Book(not: [id: {lt: 2}]){
+    title,
+    author,
+    Turtle(or:[and:[age:{eq:"abc101"},age:{eq:228}], name:{eq:True}]){
     },
-    Ha(and:[or:[age:{eq:"stari4ok"},age:{eq:101}], name:{eq:True}]){
+    Hedgehog(and:[or:[age:{eq:42},age:{eq:101}], name:{eq:True}]){
     },
-    Hagehog(and:[age:{eq:"stari4ok"}, not:[and:[or:[age:{eq:"stari4ok"},age:{eq:101}], name:{eq:True}]]]){
+    Hedgedog(and:[age:{eq:False}, not:[and:[or:[age:{eq:"stari4ok"},age:{eq:101}], name:{eq:True}]]]){
     }
   }
 }
