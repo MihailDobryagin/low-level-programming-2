@@ -71,7 +71,7 @@ struct Native_field {
 struct Related_node {
     struct Header header;
     size_t native_fields_count;
-    struct Native_field native_fields[MAX_ARRAY_SIZE];
+    char field_names[MAX_ARRAY_SIZE];
 }
 
 struct Header {
@@ -85,7 +85,7 @@ struct View {
     size_t native_fields_count;
     struct Native_field native_fields[MAX_ARRAY_SIZE];
     size_t related_fields_count;
-    struct Related_node related_fields[MAX_ARRAY_SIZE];
+    struct Related_node related_nodes[MAX_ARRAY_SIZE];
 };
 
 
