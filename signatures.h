@@ -30,30 +30,34 @@ enum Type {
     BOOLEAN_TYPE
 };
 
+struct Header;
+struct View;
+struct Filter;
+
 struct Value {
     enum Type type;
     union {
         char string[MAX_NAME_SIZE];
-        int64_t integer;
-        int64_t boolean;
+        int32_t integer;
+        int8_t boolean;
     };
 };
 
-struct Filter;
 
 struct Native_filter {
     char name[MAX_NAME_SIZE];
     enum Condition_code opcode;
     struct Value value;
-}
+};
 
 struct Logic_func {
     enum Logic_op type;
     size_t filters_count;
-    struct Filter filters[MAX_ARRAY_SIZE];
-}
+    struct Filter *filters;
+};
 
 struct Filter {
+
     uint8_t is_native;
     union {
         struct Logic_func *func;
@@ -61,30 +65,32 @@ struct Filter {
     };
 };
 
-struct View;
 
 struct Native_field {
     char name[MAX_NAME_SIZE];
     struct Value value;
-}
+};
 
-struct Related_node {
-    struct Header header;
-    size_t native_fields_count;
-    char field_names[MAX_ARRAY_SIZE];
-}
+
 
 struct Header {
+    uint8_t filter_not_null;
     char tag[MAX_NAME_SIZE];
     struct Filter filter;
-}
+};
+
+struct Related_node {
+    size_t native_fields_count;
+    char* field_names[MAX_ARRAY_SIZE];
+    struct Header header;
+};
 
 struct View {
     enum Crud_operation operation;
     struct Header header;
     size_t native_fields_count;
     struct Native_field native_fields[MAX_ARRAY_SIZE];
-    size_t related_fields_count;
+    size_t related_nodes_count;
     struct Related_node related_nodes[MAX_ARRAY_SIZE];
 };
 

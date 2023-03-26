@@ -1,4 +1,2 @@
 .idea
-build.sh
-graphQL.y
-lex.l
+y.output
