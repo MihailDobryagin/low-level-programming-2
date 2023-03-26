@@ -21,7 +21,7 @@ enum Condition_code {
 enum Logic_op {
     OP_NOT = 0,
     OP_AND,
-    OP_OR,
+    OP_OR
 
 };
 
@@ -50,13 +50,6 @@ struct Native_filter {
     enum Condition_code opcode;
     struct Value value;
 };
-
-struct Logic_func {
-    enum Logic_op type;
-    size_t filters_count;
-    struct Filter *filters;
-};
-
 struct Filter {
 
     uint8_t is_native;
@@ -65,6 +58,12 @@ struct Filter {
         struct Native_filter *filter;
     };
 };
+struct Logic_func {
+    enum Logic_op type;
+    struct Filter filters[2];
+};
+
+
 
 
 struct Native_field {

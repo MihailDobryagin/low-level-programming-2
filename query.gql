@@ -1,7 +1,12 @@
-insert{
-	Book(id: {lt: 4}){
-		title:"Retard",
-		author:"Chekhov",
-		Turtle(){}
-	}
+delete{
+  B(not: [id: {lt: 2}]){
+    ti,
+    au,
+    Turtle(or:[and:[age:{eq:"stari4ok"},age:{eq:101}], name:{eq:True}]){
+    },
+    Ha(and:[or:[age:{eq:"stari4ok"},age:{eq:101}], name:{eq:True}]){
+    },
+    Hagehog(and:[age:{eq:"stari4ok"}, not:[and:[or:[age:{eq:"stari4ok"},age:{eq:101}], name:{eq:True}]]]){
+    }
+  }
 }
