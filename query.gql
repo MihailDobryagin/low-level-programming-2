@@ -1,0 +1,7 @@
+insert{
+	Book(id: {lt: 4}){
+		title:"Retard",
+		author:"Chekhov",
+		Turtle(){}
+	}
+}

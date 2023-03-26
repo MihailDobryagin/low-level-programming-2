@@ -19,9 +19,10 @@ enum Condition_code {
 };
 
 enum Logic_op {
-    OP_AND = 0,
+    OP_NOT = 0,
+    OP_AND,
     OP_OR,
-    OP_NOT
+
 };
 
 enum Type {

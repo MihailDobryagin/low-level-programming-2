@@ -12,7 +12,8 @@ size_t vtype;
 struct Related_node rel_node = {0};
 struct Related_node empty_rel_node = {0};
 size_t size;
-struct Logic_func empty_func = {0};
+size_t stack_filter_size = 0;
+struct Filter stack_filter[20];
 
 void set_opcode(uint8_t opcode);
 void append_native_logic(char* field, uint64_t val_param, enum Condition_code opcode);
@@ -26,6 +27,8 @@ void print_native_field(struct Native_field field);
 void print_related_node(struct Related_node node);
 void print_tree();
 void set_cur_logic_operation(uint8_t op);
+void append_filters_to_child();
+void append_filters_to_root();
 %}
 
 %union {uint64_t num; char *string;}
@@ -65,19 +68,20 @@ operation: QUERY {set_opcode(0);}
         | INSERT {set_opcode(2);}
         | UPDATE {set_opcode(3);};
 
-body: STRING OPBRACE root_condition CLBRACE OPCBRACE tag CLCBRACE {memcpy(&tree.header.tag, &$1, sizeof($1));};
+body: STRING OPBRACE root_condition CLBRACE OPCBRACE tag CLCBRACE {memcpy(&tree.header.tag, $1, sizeof($1));};
 
-root_condition: condition;
+root_condition: | condition {append_filters_to_root();}
+child_condition: | condition {append_filters_to_child();}
 
 condition: logic_function | logic_native;
 
-logic_function: NOT OPSQBRACE condition CLSQBRACE {set_cur_logic_operation(0);}
+logic_function: NOT COLON OPSQBRACE condition CLSQBRACE {set_cur_logic_operation(0);}
                 |
-                logic_operation OPSQBRACE condition_seq CLSQBRACE {set_cur_logic_operation($1);};
+                logic_operation COLON OPSQBRACE condition_seq CLSQBRACE {set_cur_logic_operation($1);};
 
 logic_operation: AND {$$ = 1;}| OR {$$ = 2;};
 
-condition_seq: condition COMMA condition_seq | condition;
+condition_seq: condition COMMA condition;
 
 logic_native: STRING COLON OPCBRACE logic_native_operation COLON value CLCBRACE {append_native_logic($1, $6, $4);};
 
@@ -97,9 +101,12 @@ simple_field:   STRING {append_native_field($1, 0, false);};
                 |
                 STRING COLON value {append_native_field($1, $3, true);};
 
-related_node: STRING OPBRACE root_condition CLBRACE OPCBRACE simple_immutable_fields CLCBRACE {append_related_node($1);};
+related_node: STRING OPBRACE child_condition CLBRACE OPCBRACE simple_immutable_fields CLCBRACE {append_related_node($1);};
 
-simple_immutable_fields: STRING COMMA simple_immutable_fields {append_field_to_rel($1);}| STRING {append_field_to_rel($1);};
+simple_immutable_fields: STRING COMMA simple_immutable_fields {append_field_to_rel($1);}
+                        |
+                        STRING {append_field_to_rel($1);}
+                        |;
 
 
 value : QUOTE STRING QUOTE {vtype = STRING_TYPE; $$ = $2;}
@@ -131,20 +138,44 @@ void print_ram(){
     printf("RAM USAGE: %zu bytes\n", size);
 }
 
-void set_cur_logic_operation(uint8_t op){
-
+void append_filters_to_root(){
+    stack_filter_size=0;
+    tree.header.filter = stack_filter[stack_filter_size];
+    tree.header.filter_not_null = 1;
 }
+
+void append_filters_to_child(){
+    stack_filter_size=0;
+    tree.related_nodes[tree.related_nodes_count - 1].header.filter = stack_filter[stack_filter_size];
+    tree.related_nodes[tree.related_nodes_count - 1].header.filter_not_null = 1;
+}
+
+void set_cur_logic_operation(uint8_t op){
+    enum Logic_op logic_op = op;
+    struct Logic_func *function = test_malloc(sizeof(struct Logic_func));
+    function->type = logic_op;
+    struct Filter wrap_filter = {0};
+    switch(logic_op){
+        case OP_NOT: stack_filter_size--; function->filters[0] = stack_filter[stack_filter_size]; break;
+        case OP_AND:
+        case OP_OR: stack_filter_size--; function->filters[0] = stack_filter[stack_filter_size];
+                    stack_filter_size--; function->filters[1] = stack_filter[stack_filter_size];
+                    break;
+    }
+    wrap_filter.func = function;
+    stack_filter[stack_filter_size] = wrap_filter;
+    stack_filter_size++;
+}
+
 void append_native_logic(char* field, uint64_t val_param, enum Condition_code opcode){
-//    struct Value value = get_val(val_param);
-//    struct Native_filter filter = malloc(sizeof(struct Native_filter));
-//    filter->name = field;
-//    filter->opcode = opcode;
-//    filter->value
-//    if (tree.header.filter_not_null && !tree.header.filter.is_native){
-//
-//    }else{
-//
-//    }
+    struct Value value = get_val(val_param);
+    struct Native_filter *filter = malloc(sizeof(struct Native_filter));
+    memcpy(filter->name, field, sizeof(field));
+    filter->opcode = opcode;
+    filter->value = value;
+    struct Filter wrap_filter = {.is_native = 1, .filter = filter};
+    stack_filter[stack_filter_size] = wrap_filter;
+    stack_filter_size++;
 }
 
 struct Value get_val(uint64_t val_param){
@@ -175,6 +206,7 @@ void append_native_field(char* name, uint64_t val_param, bool with_value){
 }
 
 void append_related_node(char* tag_name){
+
     memcpy(rel_node.header.tag, tag_name, sizeof(tag_name));
     tree.related_nodes[tree.related_nodes_count++] = rel_node;
     rel_node = empty_rel_node;
@@ -187,6 +219,8 @@ void append_field_to_rel(char* field_name){
 
 void set_opcode(uint8_t opcode){
     tree.operation = opcode;
+    struct Header h = {0};
+    tree.header = h;
 }
 
 void print_value(struct Value value) {
@@ -201,12 +235,12 @@ void print_condition(struct Filter filter){
     if (filter.is_native) {
         printf("%s ", filter.filter->name);
         switch (filter.filter->opcode){
-            case    OP_EQUAL:   printf("eq "); break;
-            case    OP_GREATER: printf("gt "); break;
-            case    OP_LESS:    printf("lt "); break;
-            case    OP_NOT_GREATER: printf("le "); break;
-            case    OP_NOT_LESS:printf("ge "); break;
-        }
+            case    OP_EQUAL:   printf("== "); break;
+            case    OP_GREATER: printf("> "); break;
+            case    OP_LESS:    printf("< "); break;
+           case    OP_NOT_GREATER: printf("<= "); break;
+        case    OP_NOT_LESS:printf(">= "); break;
+    }
         print_value(filter.filter->value);
     } else {
         switch (filter.func->type){
@@ -218,6 +252,7 @@ void print_condition(struct Filter filter){
             print_condition(filter.func->filters[i]);
         printf("] ");
     }
+
 }
 
 void print_native_field(struct Native_field field){
@@ -245,9 +280,11 @@ void print_tree(){
     }
     printf("TAG: %s\n", tree.header.tag);
 
-    printf("CONDITION: \n");
-    print_condition(tree.header.filter);
-    printf("\n");
+    if (tree.header.filter_not_null){
+        printf("CONDITION: \n");
+        print_condition(tree.header.filter);
+        printf("\n");
+    }
 
     printf("NATIVE FIELDS: \n");
     for (size_t i = 0; i < tree.native_fields_count; i++)
