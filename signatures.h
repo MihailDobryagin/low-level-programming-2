@@ -70,17 +70,9 @@ struct Native_field {
 
 struct Related_node {
     struct Header header;
-    size_t fields_count;
-    struct Native_field fields[MAX_ARRAY_SIZE];
+    size_t native_fields_count;
+    struct Native_field native_fields[MAX_ARRAY_SIZE];
 }
-
-struct View_field {
-    uint8_t is_rel;
-    union {
-        struct Related_node *node;
-        struct Native_field *field;
-    };
-};
 
 struct Header {
     char tag[MAX_NAME_SIZE];
@@ -90,6 +82,13 @@ struct Header {
 struct View {
     enum Crud_operation operation;
     struct Header header;
-    size_t fields_count;
-    struct View_field fields[MAX_ARRAY_SIZE];
+    size_t native_fields_count;
+    struct Native_field native_fields[MAX_ARRAY_SIZE];
+    size_t related_fields_count;
+    struct Related_node related_fields[MAX_ARRAY_SIZE];
 };
+
+
+
+
+
