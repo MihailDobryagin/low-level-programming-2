@@ -1,3 +1,6 @@
+#ifndef LLP2_SIGNATURES
+#define LLP2_SIGNATURES
+
 #include <inttypes.h>
 
 #define MAX_NAME_SIZE 20
@@ -60,7 +63,8 @@ struct Filter {
 };
 struct Logic_func {
     enum Logic_op type;
-    struct Filter filters[2];
+    size_t filters_count;
+    struct Filter* filters;
 };
 
 
@@ -94,7 +98,4 @@ struct View {
     struct Related_node related_nodes[MAX_ARRAY_SIZE];
 };
 
-
-
-
-
+#endif
