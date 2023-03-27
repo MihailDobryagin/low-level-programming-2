@@ -1,5 +1,5 @@
 clear
-yacc --verbose --debug -d graphQL.y
+yacc -d graphQL.y
 lex lex.l
 gcc -w lex.yy.c y.tab.c -o out
 ./out < query.gql
