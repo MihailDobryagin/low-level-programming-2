@@ -30,14 +30,16 @@ struct Filter empty_filter;
 
 %%
 
-graphQL: operation OPCBRACE body CLCBRACE {print_tree(tree); print_ram();};
+graphQL: operation OPCBRACE body CLCBRACE
+	{print_tree(tree); print_ram();};
 
 operation: QUERY {set_opcode(0);}
         | DELETE {set_opcode(1);}
         | INSERT {set_opcode(2);}
         | UPDATE {set_opcode(3);};
 
-body: STRING OPBRACE root_condition CLBRACE OPCBRACE fields CLCBRACE {memcpy(&tree.header.tag, $1, strlen($1));};
+body: STRING OPBRACE root_condition CLBRACE OPCBRACE fields CLCBRACE
+	{memcpy(&tree.header.tag, $1, strlen($1));};
 
 condition: logic_function | logic_native;
 

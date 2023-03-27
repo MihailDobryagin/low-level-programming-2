@@ -47,7 +47,7 @@ void print_related_node(struct View tree, struct Related_node node){
         printf("\t|CONDITIONS|: \n\t");
         print_condition(node.header.filter);
     }
-    if (tree.operation == CRUD_UPDATE || tree.operation == CRUD_INSERT){
+    if (tree.operation != CRUD_REMOVE && node.native_fields_count > 0){
         printf("\n\t|REL NATIVE FIELDS|: \n");
         for (size_t i = 0; i < node.native_fields_count; i++)
             printf("\t%s,\n", node.field_names[i]);
